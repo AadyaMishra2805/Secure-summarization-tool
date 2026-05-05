@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PDF ChatGPT UI</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", sans-serif;
+}
+
+body {
+    display: flex;
+    height: 100vh;
+    background: #0b0f19;
+    color: #e5e7eb;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 260px;
+    background: #111827;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.new-chat {
+    background: #2563eb;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 15px;
+}
+
+#history div {
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 6px;
+    background: #1f2937;
+}
+
+#history div:hover {
+    background: #374151;
+}
+
+/* MAIN */
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* HEADER */
+.header {
+    padding: 15px;
+    text-align: center;
+    background: #111827;
+    font-weight: bold;
+}
+
+/* CHAT */
+.chat-box {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* BUBBLES */
+.message {
+    max-width: 70%;
+    padding: 12px 15px;
+    border-radius: 10px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.user {
+    align-self: flex-end;
+    background: #2563eb;
+    color: white;
+}
+
+.bot {
+    align-self: flex-start;
+    background: #1f2937;
+}
+
+/* INPUT AREA */
+.input-area {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: #111827;
+}
+
+.input-area input {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    background: #1f2937;
+    color: white;
+}
+
+/* ICON BUTTONS */
+.icon-btn {
+    margin-left: 8px;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #374151;
+    color: white;
+}
+
+.icon-btn:hover {
+    background: #4b5563;
+}
+
+/* SCROLLBAR */
+.chat-box::-webkit-scrollbar {
+    width: 6px;
+}
+.chat-box::-webkit-scrollbar-thumb {
+    background: #374151;
+}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h2>📄 PDF Assistant</h2>
+
+    <div class="new-chat" onclick="newChat()">➕ New Chat</div>
+
+    <h3>History</h3>
+    <div id="history"></div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    <div class="header">Chat with your PDF</div>
+
+    <div class="chat-box" id="chatBox"></div>
+
+    <div class="input-area">
+        <input type="text" id="question" placeholder="Ask anything...">
+
+        <!-- 📂 Upload Icon -->
+        <button class="icon-btn" onclick="document.getElementById('pdfFile').click()">📎</button>
+        <input type="file" id="pdfFile" hidden onchange="uploadPDF()">
+
+        <!-- SEND -->
+        <button class="icon-btn" onclick="askQuestion()">➤</button>
+    </div>
+
+</div>
+
+<script>
+let currentDocId = null;
+const chatBox = document.getElementById("chatBox");
+
+// ADD MESSAGE
+function addMessage(text, type) {
+    const msg = document.createElement("div");
+    msg.classList.add("message", type);
+    msg.innerText = text;
+    chatBox.appendChild(msg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// NEW CHAT
+function newChat() {
+    currentDocId = null;
+    chatBox.innerHTML = "";
+}
+
+// UPLOAD PDF
+async function uploadPDF() {
+    const file = document.getElementById("pdfFile").files[0];
+    if (!file) return;
+
+    addMessage("📂 Adding PDF to current chat...", "bot");
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+        const res = await fetch("http://127.0.0.1:8000/upload", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+
+        currentDocId = data.doc_id;
+
+        addMessage("✅ " + data.name, "bot");
+        addMessage("📚 Summary:\n\n" + data.summary, "bot");
+
+        loadHistory();
+
+    } catch {
+        addMessage("❌ Upload failed", "bot");
+    }
+}
+
+// ASK QUESTION
+async function askQuestion() {
+    const input = document.getElementById("question");
+    const question = input.value;
+    if (!question) return;
+
+    addMessage(question, "user");
+    input.value = "";
+
+    const loading = document.createElement("div");
+    loading.classList.add("message", "bot");
+    loading.innerText = "Thinking...";
+    chatBox.appendChild(loading);
+
+    try {
+        const res = await fetch("http://127.0.0.1:8000/ask", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ question, doc_id: currentDocId })
+        });
+
+        const data = await res.json();
+        chatBox.removeChild(loading);
+
+        addMessage(data.answer, "bot");
+
+    } catch {
+        chatBox.removeChild(loading);
+        addMessage("❌ Error", "bot");
+    }
+}
+
+// LOAD HISTORY
+async function loadHistory() {
+    const res = await fetch("http://127.0.0.1:8000/documents");
+    const data = await res.json();
+
+    const history = document.getElementById("history");
+    history.innerHTML = "";
+
+    data.forEach(doc => {
+        const item = document.createElement("div");
+        item.innerText = doc.name;
+
+        item.onclick = () => selectDocument(doc.id);
+
+        history.appendChild(item);
+    });
+}
+
+// SELECT DOCUMENT
+async function selectDocument(docId) {
+    currentDocId = docId;
+
+    const res = await fetch(`http://127.0.0.1:8000/documents/${docId}`);
+    const data = await res.json();
+
+    chatBox.innerHTML = "";
+
+    addMessage("📚 Summary:\n\n" + data.summary, "bot");
+
+    // 🔥 LOAD CHAT HISTORY
+    data.chat.forEach(item => {
+        addMessage(item.question, "user");
+        addMessage(item.answer, "bot");
+    });
+}
+
+// INIT
+window.onload = loadHistory;
+</script>
+
+</body>
+</html>
