@@ -1,284 +1,480 @@
-# secure-summary
-An AI-powered PDF assistant that allows users to:
+# AI PDF Research Assistant
 
-* Upload one or multiple PDFs
-* Get automatic summaries
-* Ask questions from documents
-* Maintain separate chat history per session (like ChatGPT)
+A modern AI-powered PDF Assistant that allows users to:
 
----
+* Upload PDFs
+* Generate summaries
+* Ask questions from PDFs
+* Store chat history
+* Manage multiple chats
+* Merge multiple PDFs in one chat
+* Perform semantic search using Vector Databases (FAISS)
+* Use Local LLMs for question answering
 
-## 🚀 Features
-
-### 🧠 AI Capabilities
-
-* 📚 Automatic PDF summarization (HuggingFace Transformers)
-* 🔍 Semantic search using embeddings (SentenceTransformers)
-* 💬 Question-answering using local LLM (FLAN-T5)
-
-### 📂 Multi-PDF Support
-
-* Upload multiple PDFs into **same chat**
-* System merges documents into a single knowledge base
-* Ask questions across all uploaded PDFs
-
-### 🗂️ Chat History System
-
-* Each "New Chat" creates a **new session**
-* Each session stores:
-
-  * Summary
-  * Chat history
-  * Uploaded PDFs
-* Sidebar shows chat history like ChatGPT
-
-### 🎨 Modern UI
-
-* ChatGPT-style interface
-* Sidebar history
-* Chat bubbles
-* Upload icon 📎 near input
-* Smooth UX
-
----
-
-## 🏗️ Tech Stack
-
-### Backend
+This project was built using:
 
 * FastAPI
-* FAISS (Vector DB)
-* SentenceTransformers (Embeddings)
-* HuggingFace Transformers (LLM)
-
-### Frontend
-
-* HTML + CSS + JavaScript
-* Fetch API (no frameworks)
+* FAISS
+* Sentence Transformers
+* HuggingFace Transformers
+* HTML/CSS/JavaScript
 
 ---
 
-## ⚙️ Installation
+# 🚀 Features
 
-### 1️⃣ Clone the Repository
+## ✅ PDF Upload
 
-```bash
-git clone https://github.com/your-username/pdf-chatgpt.git
-cd pdf-chatgpt
+Upload any PDF document into the system.
+
+---
+
+## ✅ AI Summarization
+
+Generate intelligent summaries from uploaded PDFs.
+
+---
+
+## ✅ Ask Questions
+
+Ask natural language questions from PDFs.
+
+Example:
+
+```text
+Who was the petitioner?
+What is the main topic?
+Explain the case in detail.
 ```
 
 ---
 
-### 2️⃣ Create Virtual Environment
+## ✅ Semantic Search
 
-```bash
-python -m venv venv
-venv\Scripts\activate   # Windows
+Uses:
+
+* Embeddings
+* Vector Databases
+* FAISS similarity search
+
+to retrieve the most relevant chunks before generating answers.
+
+---
+
+## ✅ Multi-PDF Chat Support
+
+You can:
+
+* upload multiple PDFs into the same chat
+* ask questions from specific PDFs
+* maintain separate vector databases internally
+
+---
+
+## ✅ Chat History
+
+Supports:
+
+* New Chat
+* Rename Chat
+* Delete Chat
+* Pin Chat
+
+like modern AI assistants.
+
+---
+
+## ✅ Modern UI
+
+Inspired by:
+
+* ChatGPT
+* Gemini
+* Claude
+
+with:
+
+* sidebar history
+* chat bubbles
+* dark mode interface
+* modern responsive design
+
+---
+
+# 🧠 System Architecture
+
+```text
+PDF Upload
+   ↓
+Text Extraction
+   ↓
+Chunking
+   ↓
+Embeddings
+   ↓
+FAISS Vector Database
+   ↓
+Semantic Retrieval
+   ↓
+Local LLM
+   ↓
+Generated Answer
 ```
 
 ---
 
-### 3️⃣ Install Dependencies
+# 🛠 Tech Stack
 
-```bash
-pip install fastapi uvicorn python-multipart pymupdf \
-sentence-transformers faiss-cpu transformers torch
+| Technology               | Purpose             |
+| ------------------------ | ------------------- |
+| FastAPI                  | Backend API         |
+| FAISS                    | Vector database     |
+| Sentence Transformers    | Embeddings          |
+| HuggingFace Transformers | Local LLM           |
+| PyMuPDF                  | PDF text extraction |
+| HTML/CSS/JS              | Frontend            |
+
+---
+
+# 📂 Project Structure
+
+```text
+project/
+│
+├── main.py
+├── utils.py
+├── index.html
+├── uploads/
+├── requirements.txt
+└── README.md
 ```
 
 ---
 
-### 4️⃣ Run Backend
+# ⚙️ Installation
+
+# 1️⃣ Clone Repository
+
+```bash
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+```
+
+---
+
+# 2️⃣ Open Project Folder
+
+```bash
+cd YOUR_REPO
+```
+
+---
+
+# 3️⃣ Create Virtual Environment
+
+## Windows
+
+```bash
+python -m venv .venv
+```
+
+---
+
+# 4️⃣ Activate Virtual Environment
+
+## Git Bash
+
+```bash
+source .venv/Scripts/activate
+```
+
+## CMD
+
+```bash
+.venv\Scripts\activate
+```
+
+## PowerShell
+
+```bash
+.venv\Scripts\Activate.ps1
+```
+
+---
+
+# 5️⃣ Install Dependencies
+
+```bash
+pip install fastapi uvicorn python-multipart pymupdf sentence-transformers faiss-cpu transformers torch numpy
+```
+
+---
+
+# ▶️ Run Backend
 
 ```bash
 uvicorn main:app --reload
 ```
 
-Server runs at:
+Backend runs on:
 
-```
+```text
 http://127.0.0.1:8000
 ```
 
 ---
 
-### 5️⃣ Run Frontend
+# 🌐 Run Frontend
 
-Just open:
+Simply open:
 
-```
+```text
 index.html
 ```
 
-in your browser
+in your browser.
+
+Recommended:
+
+* VS Code Live Server
+* Chrome browser
 
 ---
 
-## 📁 Project Structure
+# 📄 How PDF Processing Works
 
-```
-project/
-│── main.py          # FastAPI backend
-│── utils.py         # PDF processing + embeddings + QA
-│── index.html       # Frontend UI
-│── uploads/         # Stored PDFs
-```
+## Step 1 — Extract Text
 
----
-
-## 🔄 How It Works
-
-### 📄 Step 1: Upload PDF
-
-* File is saved in `/uploads`
-* Text extracted using PyMuPDF
-
-### ✂️ Step 2: Chunking
-
-* Text split into smaller chunks
-* Helps in better semantic search
-
-### 🔢 Step 3: Embeddings
-
-* Each chunk converted into vector using:
-
-```
-all-MiniLM-L6-v2
-```
-
-### 📦 Step 4: FAISS Index
-
-* Vectors stored in FAISS for fast similarity search
-
-### 🧠 Step 5: Summary
-
-* Uses:
-
-```
-distilbart-cnn-12-6
-```
-
-* Generates bullet-point summary
-
-### ❓ Step 6: Ask Questions
-
-* Query → converted to embedding
-* Top relevant chunks retrieved
-* Passed to FLAN-T5 model
-
----
-
-## 🔁 Multi-PDF Logic
-
-### Same Chat
-
-* PDFs are **merged**
-* Chunks added to existing FAISS index
-* Summary updated
-
-### New Chat
-
-* New document created
-* New history entry
-* Fresh chat
-
----
-
-## 🧠 Chat Memory System
-
-Each document stores:
+Using:
 
 ```python
-documents = {
-  doc_id: {
-    "chunks": [...],
-    "index": faiss_index,
-    "summary": "...",
-    "name": "...",
-    "chat": [
-        {"question": "...", "answer": "..."}
-    ]
-  }
-}
+fitz
+```
+
+from PyMuPDF.
+
+---
+
+## Step 2 — Split Text
+
+Large text is divided into chunks.
+
+Example:
+
+```python
+chunk_size=500
+overlap=50
+```
+
+This improves retrieval quality.
+
+---
+
+## Step 3 — Create Embeddings
+
+Using:
+
+```python
+SentenceTransformer("all-MiniLM-L6-v2")
+```
+
+Embeddings convert text into numerical vectors.
+
+---
+
+## Step 4 — Store in FAISS
+
+FAISS stores vector embeddings for semantic search.
+
+---
+
+## Step 5 — Semantic Retrieval
+
+When user asks a question:
+
+* question embedding is generated
+* similar chunks are retrieved
+* most relevant chunks become context
+
+---
+
+## Step 6 — Generate Answer
+
+Using:
+
+```python
+google/flan-t5-base
+```
+
+Local LLM generates final answer.
+
+---
+
+# 🧠 Multi-PDF Logic
+
+Each PDF stores:
+
+* separate chunks
+* separate embeddings
+* separate FAISS index
+* separate summary
+
+This prevents:
+
+* mixed answers
+* wrong retrieval
+* summary corruption
+
+---
+
+# 💬 Example Workflow
+
+## Upload PDF
+
+```text
+case_law.pdf
 ```
 
 ---
 
-## 🌐 API Endpoints
+## Generate Summary
 
-### 📄 Upload PDF
-
-```
-POST /upload
-```
-
-### ❓ Ask Question
-
-```
-POST /ask
-```
-
-### 📚 Get Summary
-
-```
-GET /summary
-```
-
-### 📂 Get All Documents
-
-```
-GET /documents
-```
-
-### 📄 Get One Document
-
-```
-GET /documents/{doc_id}
-```
-
-### ➕ New Chat
-
-```
-POST /new-chat
+```text
+• Civil Appeal dismissed
+• Property dispute discussed
+• Co-heirs issue explained
 ```
 
 ---
 
-## 🎯 Key Concepts Used
+## Ask Questions
 
-* Retrieval Augmented Generation (RAG)
-* Vector Databases (FAISS)
+```text
+Who was the petitioner?
+```
+
+Answer:
+
+```text
+The petitioner was Sengalani Chettiar.
+```
+
+---
+
+# 📌 Chat Features
+
+## New Chat
+
+Creates completely separate conversation.
+
+---
+
+## Rename Chat
+
+Rename chats like:
+
+```text
+Research Notes
+Legal Case Study
+ML Notes
+```
+
+---
+
+## Pin Chat
+
+Pin important chats to top.
+
+---
+
+## Delete Chat
+
+Delete unwanted conversations.
+
+---
+
+# 🔒 Security Features
+
+* Local LLM usage
+* No external APIs required
+* PDFs processed locally
+* Vector search runs locally
+
+---
+
+# 📈 Future Improvements
+
+Possible future upgrades:
+
+* Authentication system
+* Database storage
+* Persistent chat memory
+* OCR for scanned PDFs
+* Streaming responses
+* LangChain integration
+* Docker deployment
+* Cloud deployment
+* Citation highlighting
+* PDF page references
+
+---
+
+# 🧪 Example Interview Concepts Used
+
+This project demonstrates:
+
+* NLP
 * Embeddings
-* Chunking
-* Prompt Engineering
-* Session Management
+* Vector Databases
+* Semantic Search
+* Retrieval Augmented Generation (RAG)
+* FastAPI
+* Transformers
+* Local LLMs
+* Full Stack AI Systems
 
 ---
 
-## 💬 Interview Explanation
+# 📚 Important ML Concepts
 
-You can say:
+## Embeddings
 
-> "I built a multi-document AI assistant using a RAG pipeline. It supports session-based chat memory, incremental FAISS indexing, and local LLM inference using HuggingFace models."
-
----
-
-## 🚀 Future Improvements
-
-* 🗃️ Persistent storage (SQLite / MongoDB)
-* 🧾 PDF previews
-* ✏️ Rename chats
-* ❌ Delete chats
-* 🌐 Deploy (Render / Vercel)
-* ⚡ Streaming responses
+Convert text into vectors.
 
 ---
 
-## 🙌 Author
+## Vector Database
 
-**Aadya Mishra**
+Stores vectors for similarity search.
 
 ---
 
-## ⭐ If you like this project
+## Semantic Search
 
-Give it a ⭐ on GitHub and share!
+Searches meaning instead of keywords.
+
+---
+
+## RAG (Retrieval Augmented Generation)
+
+Retrieves relevant context before generating answers.
+
+---
+
+# 🤝 Contributing
+
+Pull requests and improvements are welcome.
+
+---
+
+# 📜 License
+
+MIT License
+
+---
+
+# 👨‍💻 Author
+
+Built by Aadya Mishra(under guidence of Satyam Sir)
+
+AI/ML + Full Stack Development Project
+
