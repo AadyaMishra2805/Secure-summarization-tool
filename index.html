@@ -1,298 +1,990 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>PDF ChatGPT UI</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>PDF Assistant</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: "Segoe UI", sans-serif;
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
 }
 
-body {
-    display: flex;
-    height: 100vh;
-    background: #0b0f19;
-    color: #e5e7eb;
+body{
+    font-family:'Inter',sans-serif;
+    background:#050816;
+    color:white;
+    height:100vh;
+    overflow:hidden;
+    display:flex;
 }
 
-/* SIDEBAR */
-.sidebar {
-    width: 260px;
-    background: #111827;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
+/* ===================================
+SIDEBAR
+=================================== */
+
+.sidebar{
+    width:320px;
+    background:linear-gradient(
+        180deg,
+        #081122 0%,
+        #050816 100%
+    );
+
+    border-right:1px solid rgba(255,255,255,0.08);
+
+    padding:24px;
+    display:flex;
+    flex-direction:column;
+    gap:22px;
 }
 
-.sidebar h2 {
-    font-size: 18px;
-    margin-bottom: 10px;
+.logo{
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+    font-size:28px;
+    font-weight:700;
 }
 
-.new-chat {
-    background: #2563eb;
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-    cursor: pointer;
-    margin-bottom: 15px;
+.logo-icon{
+    width:46px;
+    height:46px;
+    border-radius:14px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:linear-gradient(
+        135deg,
+        #7c3aed,
+        #2563eb
+    );
+
+    font-size:22px;
 }
 
-#history div {
-    padding: 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-bottom: 6px;
-    background: #1f2937;
+.new-chat{
+    border:none;
+    outline:none;
+
+    padding:16px;
+    border-radius:16px;
+
+    background:linear-gradient(
+        135deg,
+        #7c3aed,
+        #2563eb
+    );
+
+    color:white;
+    font-size:17px;
+    font-weight:600;
+
+    cursor:pointer;
+    transition:0.25s;
 }
 
-#history div:hover {
-    background: #374151;
+.new-chat:hover{
+    transform:translateY(-2px);
+    opacity:0.95;
 }
 
-/* MAIN */
-.main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+.history-title{
+    margin-top:8px;
+    color:#cbd5e1;
+    font-size:18px;
+    font-weight:600;
 }
 
-/* HEADER */
-.header {
-    padding: 15px;
-    text-align: center;
-    background: #111827;
-    font-weight: bold;
+#history{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    overflow-y:auto;
 }
 
-/* CHAT */
-.chat-box {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+/* ===================================
+HISTORY CARD
+=================================== */
+
+.history-item{
+    background:rgba(255,255,255,0.04);
+
+    border:1px solid rgba(255,255,255,0.05);
+
+    padding:16px;
+    border-radius:18px;
+
+    position:relative;
+    cursor:pointer;
+
+    transition:0.25s;
 }
 
-/* BUBBLES */
-.message {
-    max-width: 70%;
-    padding: 12px 15px;
-    border-radius: 10px;
-    line-height: 1.5;
-    white-space: pre-wrap;
+.history-item:hover{
+    background:rgba(124,58,237,0.15);
+    border-color:rgba(124,58,237,0.3);
+    transform:translateY(-2px);
 }
 
-.user {
-    align-self: flex-end;
-    background: #2563eb;
-    color: white;
+.history-name{
+    width:85%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+
+    color:#f8fafc;
+    font-weight:500;
 }
 
-.bot {
-    align-self: flex-start;
-    background: #1f2937;
+.menu-btn{
+    position:absolute;
+    right:16px;
+    top:14px;
+    font-size:18px;
+    cursor:pointer;
+    color:#94a3b8;
 }
 
-/* INPUT AREA */
-.input-area {
-    display: flex;
-    align-items: center;
-    padding: 12px;
-    background: #111827;
+.menu{
+    display:none;
+    position:absolute;
+    right:10px;
+    top:42px;
+
+    background:#0f172a;
+    border:1px solid rgba(255,255,255,0.08);
+
+    border-radius:14px;
+    overflow:hidden;
+    z-index:100;
+
+    width:160px;
+    backdrop-filter:blur(20px);
 }
 
-.input-area input {
-    flex: 1;
-    padding: 12px;
-    border-radius: 8px;
-    border: none;
-    outline: none;
-    background: #1f2937;
-    color: white;
+.menu div{
+    padding:14px;
+    transition:0.2s;
 }
 
-/* ICON BUTTONS */
-.icon-btn {
-    margin-left: 8px;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    background: #374151;
-    color: white;
+.menu div:hover{
+    background:rgba(255,255,255,0.05);
 }
 
-.icon-btn:hover {
-    background: #4b5563;
+/* ===================================
+MAIN
+=================================== */
+
+.main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    background:
+        radial-gradient(circle at top,
+        rgba(124,58,237,0.15),
+        transparent 30%),
+        #050816;
 }
 
-/* SCROLLBAR */
-.chat-box::-webkit-scrollbar {
-    width: 6px;
+/* ===================================
+HEADER
+=================================== */
+
+.header{
+    height:90px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:0 32px;
+
+    border-bottom:1px solid rgba(255,255,255,0.06);
+
+    background:rgba(10,15,30,0.7);
+
+    backdrop-filter:blur(20px);
 }
-.chat-box::-webkit-scrollbar-thumb {
-    background: #374151;
+
+.header-title{
+    font-size:30px;
+    font-weight:700;
 }
+
+.upload-top{
+    padding:12px 20px;
+
+    border-radius:14px;
+
+    border:1px solid rgba(255,255,255,0.08);
+
+    background:rgba(255,255,255,0.04);
+
+    cursor:pointer;
+
+    transition:0.2s;
+}
+
+.upload-top:hover{
+    background:rgba(255,255,255,0.08);
+}
+
+/* ===================================
+CHAT AREA
+=================================== */
+
+.chat-box{
+    flex:1;
+    overflow-y:auto;
+
+    padding:40px;
+
+    display:flex;
+    flex-direction:column;
+    gap:22px;
+}
+
+/* HERO SCREEN */
+
+.hero{
+    margin:auto;
+    text-align:center;
+    max-width:900px;
+}
+
+.hero-icon{
+    font-size:90px;
+    margin-bottom:22px;
+}
+
+.hero h1{
+    font-size:54px;
+    margin-bottom:18px;
+}
+
+.hero p{
+    color:#94a3b8;
+    font-size:20px;
+    line-height:1.7;
+}
+
+/* SUGGESTION CARDS */
+
+.cards{
+    margin-top:40px;
+
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:18px;
+}
+
+.card{
+    background:rgba(255,255,255,0.04);
+
+    border:1px solid rgba(255,255,255,0.06);
+
+    border-radius:22px;
+
+    padding:24px;
+    text-align:left;
+
+    transition:0.25s;
+}
+
+.card:hover{
+    transform:translateY(-4px);
+    background:rgba(124,58,237,0.12);
+}
+
+.card h3{
+    margin-bottom:10px;
+}
+
+.card p{
+    color:#94a3b8;
+    font-size:14px;
+}
+
+/* ===================================
+MESSAGES
+=================================== */
+
+.message{
+    max-width:70%;
+    padding:18px 22px;
+    border-radius:24px;
+    line-height:1.7;
+    font-size:16px;
+    white-space:pre-wrap;
+}
+
+.user{
+    align-self:flex-end;
+
+    background:linear-gradient(
+        135deg,
+        #2563eb,
+        #7c3aed
+    );
+
+    box-shadow:0 10px 30px rgba(37,99,235,0.2);
+}
+
+.bot{
+    align-self:flex-start;
+
+    background:rgba(255,255,255,0.06);
+
+    border:1px solid rgba(255,255,255,0.06);
+
+    backdrop-filter:blur(20px);
+}
+
+/* ===================================
+INPUT AREA
+=================================== */
+
+.input-area{
+    padding:24px 32px;
+
+    border-top:1px solid rgba(255,255,255,0.06);
+
+    display:flex;
+    gap:14px;
+    align-items:center;
+
+    background:rgba(10,15,30,0.85);
+
+    backdrop-filter:blur(20px);
+}
+
+.input-wrapper{
+    flex:1;
+
+    display:flex;
+    align-items:center;
+
+    background:rgba(255,255,255,0.05);
+
+    border:1px solid rgba(255,255,255,0.06);
+
+    border-radius:22px;
+
+    padding:8px;
+}
+
+.input-wrapper input{
+    flex:1;
+    border:none;
+    outline:none;
+    background:transparent;
+    color:white;
+
+    padding:14px;
+    font-size:16px;
+}
+
+.upload-btn{
+    width:48px;
+    height:48px;
+
+    border-radius:14px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    cursor:pointer;
+
+    background:rgba(255,255,255,0.05);
+
+    transition:0.2s;
+}
+
+.upload-btn:hover{
+    background:rgba(124,58,237,0.18);
+}
+
+.send-btn{
+    border:none;
+    outline:none;
+
+    padding:14px 24px;
+
+    border-radius:16px;
+
+    background:linear-gradient(
+        135deg,
+        #2563eb,
+        #7c3aed
+    );
+
+    color:white;
+    font-size:16px;
+    font-weight:600;
+
+    cursor:pointer;
+}
+
+.send-btn:hover{
+    opacity:0.95;
+}
+
+#pdfFile{
+    display:none;
+}
+
+/* ===================================
+SCROLLBAR
+=================================== */
+
+::-webkit-scrollbar{
+    width:7px;
+}
+
+::-webkit-scrollbar-thumb{
+    background:#334155;
+    border-radius:20px;
+}
+
+/* ===================================
+RESPONSIVE
+=================================== */
+
+@media(max-width:1200px){
+
+    .cards{
+        grid-template-columns:repeat(2,1fr);
+    }
+}
+
+@media(max-width:900px){
+
+    .sidebar{
+        display:none;
+    }
+
+    .cards{
+        grid-template-columns:1fr;
+    }
+
+    .hero h1{
+        font-size:40px;
+    }
+
+    .message{
+        max-width:90%;
+    }
+}
+
 </style>
 </head>
 
 <body>
 
-<!-- SIDEBAR -->
+<!-- ===================================
+SIDEBAR
+=================================== -->
+
 <div class="sidebar">
-    <h2>📄 PDF Assistant</h2>
 
-    <div class="new-chat" onclick="newChat()">➕ New Chat</div>
+    <div class="logo">
+        <div class="logo-icon">📄</div>
+        PDF Assistant
+    </div>
 
-    <h3>History</h3>
+    <button class="new-chat" onclick="newChat()">
+        ✨ New Chat
+    </button>
+
+    <div class="history-title">
+        History
+    </div>
+
     <div id="history"></div>
+
 </div>
 
-<!-- MAIN -->
+<!-- ===================================
+MAIN
+=================================== -->
+
 <div class="main">
 
-    <div class="header">Chat with your PDF</div>
+    <!-- HEADER -->
 
-    <div class="chat-box" id="chatBox"></div>
+    <div class="header">
+
+        <div class="header-title">
+            Chat with your PDF
+        </div>
+
+        <label for="pdfFile" class="upload-top">
+            ⬆ Upload PDF
+        </label>
+
+    </div>
+
+    <!-- CHAT AREA -->
+
+    <div class="chat-box" id="chatBox">
+
+        <div class="hero" id="hero">
+
+            <div class="hero-icon">📄</div>
+
+            <h1>How can I help you today?</h1>
+
+            <p>
+                Upload PDFs, ask questions, generate summaries,
+                extract insights, and chat naturally with documents.
+            </p>
+
+            <div class="cards">
+
+                <div class="card">
+                    <h3>📚 Summarize</h3>
+                    <p>Generate concise summaries instantly.</p>
+                </div>
+
+                <div class="card">
+                    <h3>🧠 Key Insights</h3>
+                    <p>Extract important concepts from PDFs.</p>
+                </div>
+
+                <div class="card">
+                    <h3>🔍 Explain</h3>
+                    <p>Understand difficult sections easily.</p>
+                </div>
+
+                <div class="card">
+                    <h3>🌍 Translate</h3>
+                    <p>Translate content into multiple languages.</p>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- INPUT -->
 
     <div class="input-area">
-        <input type="text" id="question" placeholder="Ask anything...">
 
-        <!-- 📂 Upload Icon -->
-        <button class="icon-btn" onclick="document.getElementById('pdfFile').click()">📎</button>
-        <input type="file" id="pdfFile" hidden onchange="uploadPDF()">
+        <div class="input-wrapper">
 
-        <!-- SEND -->
-        <button class="icon-btn" onclick="askQuestion()">➤</button>
+            <label for="pdfFile" class="upload-btn">
+                📎
+            </label>
+
+            <input
+                type="file"
+                id="pdfFile"
+                accept=".pdf"
+                onchange="uploadPDF()"
+            >
+
+            <input
+                type="text"
+                id="question"
+                placeholder="Ask anything about your PDF..."
+                onkeydown="handleEnter(event)"
+            >
+
+        </div>
+
+        <button class="send-btn" onclick="askQuestion()">
+            Send
+        </button>
+
     </div>
 
 </div>
 
 <script>
+
 let currentDocId = null;
+
 const chatBox = document.getElementById("chatBox");
 
-// ADD MESSAGE
-function addMessage(text, type) {
+/* ===================================
+HIDE HERO AFTER FIRST MESSAGE
+=================================== */
+
+function hideHero(){
+
+    const hero = document.getElementById("hero");
+
+    if(hero){
+        hero.style.display = "none";
+    }
+}
+
+/* ===================================
+ADD MESSAGE
+=================================== */
+
+function addMessage(text, type){
+
+    hideHero();
+
     const msg = document.createElement("div");
-    msg.classList.add("message", type);
+
+    msg.className = `message ${type}`;
+
     msg.innerText = text;
+
     chatBox.appendChild(msg);
+
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// NEW CHAT
-function newChat() {
-    currentDocId = null;
-    chatBox.innerHTML = "";
-}
+/* ===================================
+UPLOAD PDF
+=================================== */
 
-// UPLOAD PDF
-async function uploadPDF() {
+async function uploadPDF(){
+
     const file = document.getElementById("pdfFile").files[0];
-    if (!file) return;
 
-    addMessage("📂 Adding PDF to current chat...", "bot");
+    if(!file) return;
+
+    addMessage("📂 Uploading PDF...", "bot");
 
     const formData = new FormData();
+
     formData.append("file", file);
 
-    try {
-        const res = await fetch("http://127.0.0.1:8000/upload", {
-            method: "POST",
-            body: formData
-        });
+    if(currentDocId !== null){
+        formData.append("doc_id", currentDocId);
+    }
+
+    try{
+
+        const res = await fetch(
+            "http://127.0.0.1:8000/upload",
+            {
+                method:"POST",
+                body:formData
+            }
+        );
+
+        if(!res.ok){
+            throw new Error();
+        }
 
         const data = await res.json();
 
         currentDocId = data.doc_id;
 
         addMessage("✅ " + data.name, "bot");
-        addMessage("📚 Summary:\n\n" + data.summary, "bot");
+
+        addMessage(
+            "📚 Summary:\n\n" + data.summary,
+            "bot"
+        );
 
         loadHistory();
 
-    } catch {
-        addMessage("❌ Upload failed", "bot");
+    }catch(err){
+
+        addMessage(
+            "❌ Failed to upload PDF",
+            "bot"
+        );
     }
 }
 
-// ASK QUESTION
-async function askQuestion() {
-    const input = document.getElementById("question");
-    const question = input.value;
-    if (!question) return;
+/* ===================================
+ASK QUESTION
+=================================== */
+
+async function askQuestion(){
+
+    const questionInput =
+        document.getElementById("question");
+
+    const question = questionInput.value.trim();
+
+    if(!question) return;
+
+    if(currentDocId === null){
+
+        addMessage(
+            "⚠ Upload a PDF first",
+            "bot"
+        );
+
+        return;
+    }
 
     addMessage(question, "user");
-    input.value = "";
 
-    const loading = document.createElement("div");
-    loading.classList.add("message", "bot");
-    loading.innerText = "Thinking...";
-    chatBox.appendChild(loading);
+    questionInput.value = "";
 
-    try {
-        const res = await fetch("http://127.0.0.1:8000/ask", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ question, doc_id: currentDocId })
-        });
+    try{
+
+        const res = await fetch(
+            "http://127.0.0.1:8000/ask",
+            {
+                method:"POST",
+
+                headers:{
+                    "Content-Type":"application/json"
+                },
+
+                body:JSON.stringify({
+                    question,
+                    doc_id:currentDocId
+                })
+            }
+        );
 
         const data = await res.json();
-        chatBox.removeChild(loading);
 
         addMessage(data.answer, "bot");
 
-    } catch {
-        chatBox.removeChild(loading);
-        addMessage("❌ Error", "bot");
+    }catch(err){
+
+        addMessage(
+            "❌ Error getting answer",
+            "bot"
+        );
     }
 }
 
-// LOAD HISTORY
-async function loadHistory() {
-    const res = await fetch("http://127.0.0.1:8000/documents");
-    const data = await res.json();
+/* ===================================
+ENTER KEY
+=================================== */
 
-    const history = document.getElementById("history");
-    history.innerHTML = "";
+function handleEnter(event){
 
-    data.forEach(doc => {
-        const item = document.createElement("div");
-        item.innerText = doc.name;
-
-        item.onclick = () => selectDocument(doc.id);
-
-        history.appendChild(item);
-    });
+    if(event.key === "Enter"){
+        askQuestion();
+    }
 }
 
-// SELECT DOCUMENT
-async function selectDocument(docId) {
+/* ===================================
+NEW CHAT
+=================================== */
+
+async function newChat(){
+
+    await fetch(
+        "http://127.0.0.1:8000/new-chat",
+        {
+            method:"POST"
+        }
+    );
+
+    currentDocId = null;
+
+    chatBox.innerHTML = `
+        <div class="hero" id="hero">
+
+            <div class="hero-icon">📄</div>
+
+            <h1>How can I help you today?</h1>
+
+            <p>
+                Upload PDFs, ask questions, generate summaries,
+                extract insights, and chat naturally with documents.
+            </p>
+
+        </div>
+    `;
+}
+
+/* ===================================
+LOAD HISTORY
+=================================== */
+
+async function loadHistory(){
+
+    try{
+
+        const res = await fetch(
+            "http://127.0.0.1:8000/documents"
+        );
+
+        const data = await res.json();
+
+        const history =
+            document.getElementById("history");
+
+        history.innerHTML = "";
+
+        data.forEach(doc => {
+
+            const item =
+                document.createElement("div");
+
+            item.className = "history-item";
+
+            item.innerHTML = `
+                <div class="history-name">
+                    ${doc.pinned ? "📌 " : ""}
+                    ${doc.name}
+                </div>
+
+                <div class="menu-btn">⋮</div>
+
+                <div class="menu">
+                    <div onclick="renameChat('${doc.id}')">
+                        ✏ Rename
+                    </div>
+
+                    <div onclick="pinChat('${doc.id}')">
+                        📌 Pin
+                    </div>
+
+                    <div onclick="deleteChat('${doc.id}')">
+                        🗑 Delete
+                    </div>
+                </div>
+            `;
+
+            item.onclick = () => {
+                selectDocument(doc.id);
+            };
+
+            const menuBtn =
+                item.querySelector(".menu-btn");
+
+            const menu =
+                item.querySelector(".menu");
+
+            menuBtn.onclick = (e) => {
+
+                e.stopPropagation();
+
+                menu.style.display =
+                    menu.style.display === "block"
+                    ? "none"
+                    : "block";
+            };
+
+            history.appendChild(item);
+        });
+
+    }catch(err){
+
+        console.log(err);
+    }
+}
+
+/* ===================================
+LOAD CHAT
+=================================== */
+
+async function selectDocument(docId){
+
     currentDocId = docId;
 
-    const res = await fetch(`http://127.0.0.1:8000/documents/${docId}`);
+    const res = await fetch(
+        `http://127.0.0.1:8000/documents/${docId}`
+    );
+
     const data = await res.json();
 
     chatBox.innerHTML = "";
 
-    addMessage("📚 Summary:\n\n" + data.summary, "bot");
+    addMessage(
+        "📚 Summary:\n\n" + data.summary,
+        "bot"
+    );
 
-    // 🔥 LOAD CHAT HISTORY
-    data.chat.forEach(item => {
-        addMessage(item.question, "user");
-        addMessage(item.answer, "bot");
+    data.chat.forEach(chat => {
+
+        addMessage(chat.question, "user");
+
+        addMessage(chat.answer, "bot");
     });
 }
 
-// INIT
+/* ===================================
+RENAME CHAT
+=================================== */
+
+async function renameChat(id){
+
+    const newName = prompt("Enter new name");
+
+    if(!newName) return;
+
+    await fetch(
+        `http://127.0.0.1:8000/rename/${id}`,
+        {
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+                name:newName
+            })
+        }
+    );
+
+    loadHistory();
+}
+
+/* ===================================
+DELETE CHAT
+=================================== */
+
+async function deleteChat(id){
+
+    await fetch(
+        `http://127.0.0.1:8000/delete/${id}`,
+        {
+            method:"DELETE"
+        }
+    );
+
+    if(currentDocId === id){
+        chatBox.innerHTML = "";
+        currentDocId = null;
+    }
+
+    loadHistory();
+}
+
+/* ===================================
+PIN CHAT
+=================================== */
+
+async function pinChat(id){
+
+    await fetch(
+        `http://127.0.0.1:8000/pin/${id}`,
+        {
+            method:"POST"
+        }
+    );
+
+    loadHistory();
+}
+
+/* ===================================
+INITIAL LOAD
+=================================== */
+
 window.onload = loadHistory;
+
 </script>
 
 </body>

@@ -1,9 +1,8 @@
-import fitz  # PyMuPDF
+import fitz
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
 from transformers import pipeline
-
 
 # =========================
 # 📄 Extract text from PDF
@@ -28,6 +27,7 @@ def split_text(text, chunk_size=500, overlap=50):
     while start < len(text):
         end = start + chunk_size
         chunk = text[start:end]
+
         chunks.append(chunk)
 
         start += chunk_size - overlap
@@ -42,12 +42,18 @@ embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 
 # =========================
-# 🔢 Convert chunks to vectors
+# 🔢 Create embeddings
 # =========================
 def create_embeddings(chunks):
-    embeddings = embedding_model.encode(chunks)
 
-    # 🔥 FIX 1: FAISS needs float32
+    # 🔥 if metadata chunks
+    if isinstance(chunks[0], dict):
+        texts = [chunk["text"] for chunk in chunks]
+    else:
+        texts = chunks
+
+    embeddings = embedding_model.encode(texts)
+
     return np.array(embeddings).astype("float32")
 
 
@@ -59,30 +65,31 @@ def store_in_faiss(embeddings):
 
     index = faiss.IndexFlatL2(dimension)
 
-    # already float32 now
     index.add(embeddings)
 
     return index
 
 
 # =========================
-# 🔍 Search similar chunks
+# 🔍 Search chunks
 # =========================
-def search_chunks(query, index, chunks, top_k=3):
+def search_chunks(query, index, chunks, top_k=4):
 
-    # 🔥 FIX 2: ensure correct dtype + shape
     query_embedding = embedding_model.encode([query])
     query_embedding = np.array(query_embedding).astype("float32")
 
     distances, indices = index.search(query_embedding, top_k)
 
-    results = [chunks[i] for i in indices[0]]
+    results = []
+
+    for i in indices[0]:
+        results.append(chunks[i])
 
     return results
 
 
 # =========================
-# 🤖 LLM (FLAN-T5)
+# 🤖 QA MODEL
 # =========================
 qa_model = pipeline(
     "text2text-generation",
@@ -96,10 +103,8 @@ qa_model = pipeline(
 # =========================
 def generate_answer(context, question):
 
-    # 🚀 IMPROVEMENT: cleaner prompt (reduces hallucination)
     prompt = f"""
-Answer ONLY from the given context.
-If the answer is not in context, say "Not found in document."
+Use the context below to answer the question clearly and completely.
 
 Context:
 {context}
@@ -118,13 +123,9 @@ Answer:
         repetition_penalty=1.2
     )
 
-    full_text = result[0]["generated_text"]
+    answer = result[0]["generated_text"]
 
-    # extract answer cleanly
-    answer = full_text.split("Answer:")[-1].strip()
-
-    # clean incomplete sentences
-    if "." in answer:
-        answer = answer[:answer.rfind(".") + 1]
+    if "Answer:" in answer:
+        answer = answer.split("Answer:")[-1].strip()
 
     return answer
